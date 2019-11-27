@@ -16,7 +16,7 @@ class BoardComponent extends React.Component {
     this.handleBoardLists = this.handleBoardLists.bind(this);
     this.handleBoardCards = this.handleBoardCards.bind(this);
 
-    let boardCardsPromise = this.state.trello.getCardsOnBoard(this.state.id);
+    let boardCardsPromise = this.state.trello.getCardsOnBoardWithExtraParams(this.state.id, { members: true, member_fields: 'fullName', tags: true});
     boardCardsPromise.then((boardCards) => {
       this.handleBoardCards(boardCards);
     })
@@ -36,7 +36,8 @@ class BoardComponent extends React.Component {
 
         lists[card['idList']].push({
           id: card['id'],
-          title: card['name']
+          title: card['name'],
+          description: card['members'].map(member => member['fullName']).join(' - ')
         })
       })
     }

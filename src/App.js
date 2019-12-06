@@ -2,7 +2,7 @@ import React from 'react';
 import { Navbar, Container, Form, Button, Alert } from 'react-bootstrap';
 import ReactLoading from "react-loading";
 import Trello from 'trello';
-import BoardComponent from './components/BoardComponent.js'
+import BoardComponent from './components/BoardComponent.js';
 import './App.css';
 
 class App extends React.Component {
@@ -46,8 +46,9 @@ class App extends React.Component {
       let boardsPromise = trello.getBoards('me');
 
       boardsPromise.then((resp) => {
-        Array.isArray(resp) ? this.setState({ loading: false, boards: resp, errorMsg: "" }) : this.setState({ loading: false, errorMsg: resp, trello: null })
-      })
+        let newState = Array.isArray(resp) ? { loading: false, boards: resp, errorMsg: "" } : { loading: false, errorMsg: resp, trello: null };
+        this.setState(newState);
+      });
     });
   }
 

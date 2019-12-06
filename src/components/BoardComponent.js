@@ -1,5 +1,5 @@
 import React from 'react';
-import Board from 'react-trello'
+import Board from 'react-trello';
 
 class BoardComponent extends React.Component {
   constructor(props) {
@@ -24,31 +24,31 @@ class BoardComponent extends React.Component {
     let boardLabelsPromise = this.state.trello.getLabelsForBoard(this.state.id);
     boardLabelsPromise.then((boardLabels) => {
       this.handleBoardLabels(boardLabels);
-    })
+    });
   }
 
   handleBoardLabels (data) {
     let boardCardsPromise = this.state.trello.getCardsOnBoardWithExtraParams(this.state.id, { members: true, member_fields: 'fullName,avatarUrl', tags: true});
     boardCardsPromise.then((boardCards) => {
       this.handleBoardCards(boardCards);
-    })
+    });
   }
 
   handleBoardCards (cards) {
-    let lists = []
+    let lists = [];
 
     if (cards) {
       cards.map(card => {
-        if (!lists[card['idList']]) {
-          lists[card['idList']] = []
+        if (!lists[card.idList]) {
+          lists[card.idList] = [];
         }
 
-        lists[card['idList']].push({
-          id: card['id'],
-          title: card['name'],
-          description: card['members'].map(member => member['fullName']).join(' - ')
-        })
-      })
+        lists[card.idList].push({
+          id: card.id,
+          title: card.name,
+          description: card.members.map(member => member.fullName).join(' - ')
+        });
+      });
     }
 
     this.setState({lists: lists});
@@ -56,24 +56,24 @@ class BoardComponent extends React.Component {
     let boardListsPromise = this.state.trello.getListsOnBoard(this.state.id);
     boardListsPromise.then((boardLists) => {
       this.handleBoardLists(boardLists);
-    })
+    });
   }
 
   handleBoardLists (data) {
     data.shift();
 
-    let lists = []
+    let lists = [];
 
     if (data) {
       data.map(list => {
-        lists.push({id: list['id'], title: list['name'], cards: this.state.lists[list['id']]})
-      })
+        lists.push({id: list.id, title: list.name, cards: this.state.lists[list.id]});
+      });
     }
 
     this.setState(
       {data: { lanes: lists }},
       () => {
-        this.setState({loading: false})
+        this.setState({loading: false});
       }
     );
   }

@@ -1,5 +1,4 @@
 import React from 'react';
-import ReactLoading from "react-loading";
 import Board from 'react-trello'
 
 class BoardComponent extends React.Component {
@@ -11,21 +10,31 @@ class BoardComponent extends React.Component {
       trello: this.props.trello,
       lists: [],
       data: null,
+      loading: this.props.loading
     };
 
     this.handleBoardLists = this.handleBoardLists.bind(this);
     this.handleBoardCards = this.handleBoardCards.bind(this);
+    this.handleBoardLabels = this.handleBoardLabels.bind(this);
 
-    let boardCardsPromise = this.state.trello.getCardsOnBoardWithExtraParams(this.state.id, { members: true, member_fields: 'fullName', tags: true});
+    this.loadBoardData();
+  }
+
+  loadBoardData () {
+    let boardLabelsPromise = this.state.trello.getLabelsForBoard(this.state.id);
+    boardLabelsPromise.then((boardLabels) => {
+      this.handleBoardLabels(boardLabels);
+    })
+  }
+
+  handleBoardLabels (data) {
+    let boardCardsPromise = this.state.trello.getCardsOnBoardWithExtraParams(this.state.id, { members: true, member_fields: 'fullName,avatarUrl', tags: true});
     boardCardsPromise.then((boardCards) => {
       this.handleBoardCards(boardCards);
     })
   }
 
   handleBoardCards (cards) {
-    console.log('cards');
-    console.log(cards);
-
     let lists = []
 
     if (cards) {
@@ -47,8 +56,6 @@ class BoardComponent extends React.Component {
     let boardListsPromise = this.state.trello.getListsOnBoard(this.state.id);
     boardListsPromise.then((boardLists) => {
       this.handleBoardLists(boardLists);
-
-      console.log(boardLists);
     })
   }
 
@@ -63,15 +70,19 @@ class BoardComponent extends React.Component {
       })
     }
 
-    console.log(lists)
-    this.setState({data: {lanes: lists}});
+    this.setState(
+      {data: { lanes: lists }},
+      () => {
+        this.setState({loading: false})
+      }
+    );
   }
 
   render() {
     return (
       <div>
         {this.state.data && (
-          <Board data={this.state.data} cardStyle={{whiteSpace: 'normal'}} />
+          <Board data={this.state.data} cardStyle={{whiteSpace: 'normal'}} hideCardDeleteIcon={true} />
         )}
       </div>
     )

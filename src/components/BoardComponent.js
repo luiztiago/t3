@@ -8,7 +8,7 @@ class BoardComponent extends React.Component {
     this.state = {
       id: this.props.id,
       trello: this.props.trello,
-      boards: null,
+      currentBoard: this.props.currentBoard,
       lists: [],
       cards: [],
       cardsData: null,
@@ -112,7 +112,7 @@ class BoardComponent extends React.Component {
     return (
       <div>
         {this.state.data && (
-          <Board data={this.state.data} cardStyle={{whiteSpace: 'normal'}} hideCardDeleteIcon={true} style={{backgroundColor: '#282c34'}} />
+          <Board data={this.state.data} cardStyle={{whiteSpace: 'normal'}} hideCardDeleteIcon={true} style={{backgroundColor: '#282c34', backgroundSize: 'cover', backgroundImage: 'url("' + this.state.currentBoard.background + '")'}} />
         )}
       </div>
     )

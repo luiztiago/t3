@@ -23,6 +23,7 @@ class App extends React.Component {
       boards: [],
       boardId: "",
       boardIsSelected: false,
+      currentBoard: null,
       errorMsg: "",
       date: new Date()
     };
@@ -49,7 +50,8 @@ class App extends React.Component {
 
   handleChangeBoard(event) {
     this.setState({
-      boardId: event.target.value
+      boardId: event.target.value,
+      currentBoard: this.state.boards[event.target.value]
     }, () => {
       this.setState({ boardIsSelected: true });
     });
@@ -83,11 +85,28 @@ class App extends React.Component {
     this.setState({trello: trello}, () => {
       let boardsPromise = trello.getBoards('me');
 
-      boardsPromise.then((resp) => {
-        let newState = Array.isArray(resp) ? { loading: false, boards: resp, errorMsg: "" } : { loading: false, errorMsg: resp, trello: null };
-        this.setState(newState);
+      boardsPromise.then((data) => {
+        this.handleBoardData(data);
       });
     });
+  }
+
+  handleBoardData(data) {
+    // let newState = Array.isArray(data) ? { loading: false, boards: data, errorMsg: "" } : { loading: false, errorMsg: data, trello: null };
+    // this.setState(newState);
+
+    if (!Array.isArray(data)) {
+      this.setState({ loading: false, errorMsg: data, trello: null });
+      return false;
+    }
+
+
+    let boards = [];
+    data.map((board) => {
+      boards[board.id] = { id: board.id, name: board.name, background: board.prefs.backgroundImage };
+    });
+
+    this.setState({loading: false, boards: boards, errorMsg: "" });
   }
 
   render() {
@@ -102,7 +121,7 @@ class App extends React.Component {
                 <DayPickerInput name="date" value={this.state.date} onDayChange={this.handleDateChange} placeholder="mm/dd/yyyy" />
                 <Form.Control as="select" value={this.state.boardId} name="boardId" onChange={this.handleChangeBoard} disabled={this.state.boardId}>
                   <option key="" value="-1">- Select Board -</option>,
-                  {this.state.boards.map(board =>
+                  {Object.entries(this.state.boards).map(([key, board]) =>
                     <option key={board.id} value={board.id}>{board.name}</option>
                   )};
                 </Form.Control>
@@ -112,7 +131,7 @@ class App extends React.Component {
         </Navbar>
         <div className="App-content">
           {this.state.boardIsSelected !== false ? (
-            <BoardComponent trello={this.state.trello} id={this.state.boardId} date={this.state.date} changeBoard={this.handleChangeBoard} loading={this.state.loading} />
+            <BoardComponent trello={this.state.trello} id={this.state.boardId} date={this.state.date} changeBoard={this.handleChangeBoard} loading={this.state.loading} currentBoard={this.state.currentBoard} />
           ): (
             <Container className="pt-5">
               {this.state.loading ? <ReactLoading type="bars" /> : (

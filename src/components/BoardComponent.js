@@ -16,9 +16,6 @@ class BoardComponent extends React.Component {
       date: this.props.date
     };
 
-    this.handleBoardLists = this.handleBoardLists.bind(this);
-    this.handleBoardCards = this.handleBoardCards.bind(this);
-
     this.loadBoardData();
   }
 

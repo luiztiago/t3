@@ -1,68 +1,141 @@
 import React from 'react';
-import { Navbar, Container, Form, Button } from 'react-bootstrap';
+import { Navbar, Container, Form, Button, Alert } from 'react-bootstrap';
 import ReactLoading from "react-loading";
+import DayPickerInput from 'react-day-picker/DayPickerInput';
 import Trello from 'trello';
-import BoardComponent from './components/BoardComponent.js'
+import BoardComponent from './components/BoardComponent.js';
+
+import 'react-day-picker/lib/style.css';
 import './App.css';
 
 class App extends React.Component {
   constructor(props) {
     super(props);
 
+    let apiKey = localStorage.getItem('trelloApiKey') || '';
+    let token = localStorage.getItem('trelloToken') || '';
+
     this.state = {
       loading: false,
+      apiKey: apiKey,
+      token: token,
+      trello: null,
+      boards: [],
+      boardId: "",
+      boardIsSelected: false,
+      currentBoard: null,
+      errorMsg: "",
+      date: new Date()
+    };
+
+    this.handleChange = this.handleChange.bind(this);
+    this.handleDateChange = this.handleDateChange.bind(this);
+    this.handleConnect = this.handleConnect.bind(this);
+    this.handleChangeBoard = this.handleChangeBoard.bind(this);
+    this.handleTrelloCredentials = this.handleTrelloCredentials.bind(this);
+  }
+
+  handleTrelloCredentials(event) {
+    localStorage.clear();
+
+    this.setState({
       apiKey: '',
       token: '',
       trello: null,
       boards: [],
-      boardId: null,
+      boardId: "",
       boardIsSelected: false
-    };
+    });
+  }
 
-    this.handleChange = this.handleChange.bind(this);
-    this.handleConnect = this.handleConnect.bind(this);
-    this.handleSelectBoard = this.handleSelectBoard.bind(this);
+  handleChangeBoard(event) {
+    this.setState({
+      loading: true,
+      boardIsSelected: false,
+      boardId: event.target.value,
+      currentBoard: this.state.boards[event.target.value]
+    }, () => {
+      this.setState({ boardIsSelected: true, loading: false });
+    });
   }
 
   handleChange(event) {
     this.setState({[event.target.name]: event.target.value});
   }
 
-  handleConnect(event) {
-    event.preventDefault();
-    this.setState({loading: true});
-
-    let trello = new Trello(this.state.apiKey, this.state.token);
-    this.setState({trello: trello});
-
-    let boardsPromise = trello.getBoards('me');
-
-    boardsPromise.then((boards) => {
-      this.setState({loading: false});
-      this.setState({boards: boards});
-    })
+  handleDateChange(day) {
+    this.setState({
+      loading: true,
+      boardIsSelected: false,
+      date: day
+    }, () => {
+      this.setState({ boardIsSelected: true, loading: false });
+    });
   }
 
-  handleSelectBoard(event) {
-    event.preventDefault();
-    console.log(event);
-    this.setState({boardIsSelected: true});
+  handleConnect(event = null) {
+    if (event) {
+      event.preventDefault();
+    }
+
+    this.setState({loading: true});
+
+    localStorage.setItem('trelloApiKey', this.state.apiKey);
+    localStorage.setItem('trelloToken', this.state.token);
+
+    let trello = new Trello(this.state.apiKey, this.state.token);
+    this.setState({trello: trello}, () => {
+      let boardsPromise = trello.getBoards('me');
+
+      boardsPromise.then((data) => {
+        this.handleBoardData(data);
+      });
+    });
+  }
+
+  handleBoardData(data) {
+    if (!Array.isArray(data)) {
+      this.setState({ loading: false, errorMsg: data, trello: null });
+      return false;
+    }
+
+    let boards = [];
+    data.map((board) => {
+      boards[board.id] = { id: board.id, name: board.name, background: board.prefs.backgroundImage };
+    });
+
+    this.setState({loading: false, boards: boards, errorMsg: "" });
   }
 
   render() {
     return (
       <div className="App">
         <Navbar bg="light" expand="lg">
-          <Navbar.Brand href="#home">T3 - Trello Time Travel</Navbar.Brand>
+          <Navbar.Brand className="mr-auto" href="#home">T3 - Trello Time Travel</Navbar.Brand>
+          {this.state.trello && this.state.boards !== [] &&
+            <Form inline onSubmit={() => {}}>
+              <Form.Group controlId="exampleForm.ControlSelect1">
+                <Button variant="link" type="button" size="sm" onClick={this.handleTrelloCredentials}>Change Trello Credentials</Button>
+                <DayPickerInput name="date" value={this.state.date} onDayChange={this.handleDateChange} placeholder="mm/dd/yyyy" />
+                <Form.Control as="select" value={this.state.boardId} name="boardId" onChange={this.handleChangeBoard}>
+                  <option key="" value="-1">- Select Board -</option>,
+                  {Object.entries(this.state.boards).map(([key, board]) =>
+                    <option key={board.id} value={board.id}>{board.name}</option>
+                  )};
+                </Form.Control>
+              </Form.Group>
+            </Form>
+          }
         </Navbar>
         <div className="App-content">
           {this.state.boardIsSelected !== false ? (
-            <BoardComponent trello={this.state.trello} id={this.state.boardId} />
+            <BoardComponent trello={this.state.trello} id={this.state.boardId} date={this.state.date} changeBoard={this.handleChangeBoard} loading={this.state.loading} currentBoard={this.state.currentBoard} />
           ): (
-            <Container>
+            <Container className="pt-5">
               {this.state.loading ? <ReactLoading type="bars" /> : (
-                this.state.trello === null ? (
+                (this.state.trello === null) &&
                   <Form onSubmit={this.handleConnect}>
+                    {this.state.errorMsg && <Alert variant="danger">{this.state.errorMsg}</Alert>}
                     <Form.Group controlId="formBasicApiKey">
                       <Form.Label>API Key</Form.Label>
                       <Form.Control value={this.state.apiKey} type="text" name="apiKey" placeholder="Enter your API KEY" onChange={this.handleChange} />
@@ -70,35 +143,15 @@ class App extends React.Component {
 
                     <Form.Group controlId="formBasicToken">
                       <Form.Label>Token</Form.Label>
-                      <Form.Control value={this.state.token} type="text" name="token" placeholder="Token" onChange={this.handleChange} />
+                      <Form.Control value={this.state.token} type="password" name="token" placeholder="Token" onChange={this.handleChange} />
                     </Form.Group>
 
-                    <Button variant="primary" type="submit" size="lg" block>
+                    <Button variant="primary" type="submit" size="lg" block disabled={!this.state.apiKey || !this.state.token}>
                       Get Boards
                     </Button>
                   </Form>
-                ) : (
-                  <div>
-                    <Form onSubmit={this.handleSelectBoard}>
-                      <Form.Group controlId="exampleForm.ControlSelect1">
-                        <Form.Label>Select Board</Form.Label>
-                        <Form.Control as="select" value={this.state.boardId} name="boardId" onChange={this.handleChange}>
-                          <option value="-1">- Select -</option>,
-                          {this.state.boards.map(board =>
-                            <option key={board.id} value={board.id}>{board.name}</option>
-                          )};
-                        </Form.Control>
-                        <Form.Text className="text-muted">
-                          We'll never share your data with anyone else.
-                        </Form.Text>
-                      </Form.Group>
-                      <Button variant="primary" type="submit" size="lg" block>
-                        Submit
-                      </Button>
-                    </Form>
-                  </div>
                 )
-              )}
+              }
             </Container>
           ) }
         </div>

@@ -6,3 +6,10 @@
   justify-content: center;
   color: white;
 }
+
+.DayPickerInput input {
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  padding: 6px;
+  margin-right: 10px;
+}

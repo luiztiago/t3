@@ -92,14 +92,10 @@ class App extends React.Component {
   }
 
   handleBoardData(data) {
-    // let newState = Array.isArray(data) ? { loading: false, boards: data, errorMsg: "" } : { loading: false, errorMsg: data, trello: null };
-    // this.setState(newState);
-
     if (!Array.isArray(data)) {
       this.setState({ loading: false, errorMsg: data, trello: null });
       return false;
     }
-
 
     let boards = [];
     data.map((board) => {

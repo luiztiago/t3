@@ -50,10 +50,12 @@ class App extends React.Component {
 
   handleChangeBoard(event) {
     this.setState({
+      loading: true,
+      boardIsSelected: false,
       boardId: event.target.value,
       currentBoard: this.state.boards[event.target.value]
     }, () => {
-      this.setState({ boardIsSelected: true });
+      this.setState({ boardIsSelected: true, loading: false });
     });
   }
 
@@ -115,7 +117,7 @@ class App extends React.Component {
               <Form.Group controlId="exampleForm.ControlSelect1">
                 <Button variant="link" type="button" size="sm" onClick={this.handleTrelloCredentials}>Change Trello Credentials</Button>
                 <DayPickerInput name="date" value={this.state.date} onDayChange={this.handleDateChange} placeholder="mm/dd/yyyy" />
-                <Form.Control as="select" value={this.state.boardId} name="boardId" onChange={this.handleChangeBoard} disabled={this.state.boardId}>
+                <Form.Control as="select" value={this.state.boardId} name="boardId" onChange={this.handleChangeBoard}>
                   <option key="" value="-1">- Select Board -</option>,
                   {Object.entries(this.state.boards).map(([key, board]) =>
                     <option key={board.id} value={board.id}>{board.name}</option>

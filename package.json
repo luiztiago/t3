@@ -10,7 +10,7 @@
     "react-day-picker": "^7.4.0",
     "react-dom": "^16.9.0",
     "react-loading": "^2.0.3",
-    "react-scripts": "^3.3.0",
+    "react-scripts": "^5.0.1",
     "react-trello": "2.2.3",
     "schema-utils": "2.6.1",
     "trello": "github:luiztiago/trello#0.10.0"
